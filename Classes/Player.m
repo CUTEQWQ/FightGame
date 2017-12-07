@@ -1,20 +1,20 @@
 //
-//  Enemy.m
+//  Player.m
 //
 //  Created by : 陈倩文
 //  Project    : FightGame
-//  Date       : 2017/12/3
+//  Date       : 2017/12/5
 //
 //  Copyright (c) 2017年 chenqianwen.
 //  All rights reserved.
 //
 // -----------------------------------------------------------------
 
-#import "Enemy.h"
+#import "Player.h"
 
 // -----------------------------------------------------------------
 
-@implementation Enemy
+@implementation Player
 
 // -----------------------------------------------------------------
 
@@ -29,28 +29,27 @@
     NSAssert(self, @"Unable to create class %@", [self class]);
     // class initalization goes here
     
-    //for test
-    enemyType = 0;
-    
-    //init enemy
+    //init player
     [self initMyPara];
-    m_scale = 0.5f;
+    m_scale = 0.3f;
     
-    switch (enemyType) {
-        case 0:
-            m_entity = [CCSprite spriteWithImageNamed:@"waitingpenguin.png"];
-            break;
-            
-        default:
-            break;
-    }
-    [m_entity setPosition:[MapEdittor GeneratePosition:m_entity Scale:m_scale]];
-    printf("enemy:%f,%f\n",m_entity.position.x,m_entity.position.y);
+    m_entity = [CCSprite spriteWithImageNamed:@"beararmmove.png"];
     [m_entity setScale:m_scale];
+    [m_entity setPosition:[MapEdittor GeneratePosition:m_entity Scale:m_scale]];
     [self addChild:m_entity];
     
-    
     return self;
+}
+-(void)mirror:(BOOL)flip Dir:(CGPoint)dir{
+    m_entity.flipX = flip;
+    if (dir.x > 0) {
+        left = NO;
+    }else{
+        left = YES;
+    }
+}
+-(BOOL)getTowardsLeft{
+    return left;
 }
 // -----------------------------------------------------------------
 

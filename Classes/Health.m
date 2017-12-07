@@ -51,6 +51,9 @@
     hp = m_hp;
     [progress setPercentage:hp];
 }
+-(CGPoint)getPosition{
+    return progress.position;
+}
 // -----------------------------------------------------------------
 
 @end

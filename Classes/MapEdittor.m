@@ -98,5 +98,69 @@
     }
     return false;
 }
+//limit the entity can't go out of the screen
+//modify the position of entity
++(CGPoint)boundaryLimitEntity:(Entity*)m_entity Dir:(CGPoint)dir Force:(float)force Screen:(CGSize)screenSize{
+    
+    CGPoint deltaPos = ccpMult(dir, force*0.05);
+    CGSize entitySize = m_entity.contentSize;
+    CGPoint newPos;
+    if (deltaPos.x + [m_entity getPosition].x > screenSize.width - entitySize.width*0.5) {
+        newPos = CGPointMake(screenSize.width - entitySize.width*0.5, [m_entity getPosition].y);
+    }else if (deltaPos.x + [m_entity getPosition].x < entitySize.width*0.5 ){
+        newPos = CGPointMake(entitySize.width*0.5, [m_entity getPosition].y);
+    }else{
+        newPos = CGPointMake([m_entity getPosition].x + deltaPos.x, [m_entity getPosition].y);
+    }
+    
+    if (deltaPos.y + [m_entity getPosition].y >screenSize.height - entitySize.height*0.5) {
+        newPos = CGPointMake([m_entity getPosition].x, screenSize.height - entitySize.height*0.5);
+    }else if (deltaPos.y + [m_entity getPosition].y <entitySize.height*0.5){
+        newPos = CGPointMake([m_entity getPosition].x, entitySize.height*0.5);
+    }else{
+        newPos = CGPointMake([m_entity getPosition].x, [m_entity getPosition].y + deltaPos.y);
+    }
+    return newPos;
+}
+
++(void)moveWithParabola:(Entity *)m_entity startP:(CGPoint)startPoint endP:(CGPoint)endPoint Time:(float)duration{
+    float sx = startPoint.x;
+    float sy = startPoint.y;
+    float ex = endPoint.x;
+    float ey = endPoint.y;
+    int height = [m_entity getEntitySize].height * 0.5;
+    ccBezierConfig bezier;
+    bezier.controlPoint_1 = ccp(sx, sy);
+    bezier.controlPoint_2 = ccp(sx+(ex-sx)*0.5, sy-(ey-sy)*0.5+200);
+    bezier.endPosition = ccp(endPoint.x-30, endPoint.y+height);
+    CCActionBezierTo *actionMove = [CCActionBezierTo actionWithDuration:duration bezier:bezier];
+    [m_entity runAction:actionMove];
+}
++(void)moveWithParabola:(Entity *)m_entity startP:(CGPoint)startPoint endP:(CGPoint)endPoint startA:(float)startAngle endA:(float)endAngle Time:(float)duration{
+    float sx = startPoint.x;
+    float sy = startPoint.y;
+    float ex = endPoint.x;
+    float ey = endPoint.y;
+    //int height = [m_entity getEntitySize].height * 0.5;
+    int height = [m_entity getEntitySize].height;
+    [m_entity setRotation:startAngle];
+    
+    ccBezierConfig bezier;
+    bezier.controlPoint_1 = ccp(sx, sy);
+    
+    //随机曲线
+    float tmp_a = CCRANDOM_0_1()*5;
+    float tmp_b = CCRANDOM_0_1()*2;
+    
+    bezier.controlPoint_2 = ccp(sx+(ex-sx)*tmp_a, sy-(ey-sy)*tmp_b+120);
+    //bezier.endPosition = ccp(endPoint.x-30, endPoint.y+height);
+    bezier.endPosition = endPoint;
+    
+    
+    CCActionBezierTo *actionMove = [CCActionBezierTo actionWithDuration:duration bezier:bezier];
+    CCActionRotateTo *actionRotate = [CCActionRotateTo actionWithDuration:duration angle:endAngle];
+    CCAction *action = [CCActionSpawn actions:actionMove,actionRotate, nil];
+    [m_entity runAct:action];
+}
 
 @end

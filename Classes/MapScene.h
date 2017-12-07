@@ -19,19 +19,17 @@
 #import "Health.h"
 #import "UsrInfo.h"
 #import "GameOver.h"
+#import "Player.h"
+#import "Block.h"
 
 // -----------------------------------------------------------------
 
 @interface MapScene : CCScene{
     JoyStick *m_stick;
-    CCSprite *m_player;
+    Player *player;
     Enemy *m_enemy;
     Health *health;
-    float m_hp;
-    int m_killed;
     UsrInfo* m_info;
-    
-    BOOL died;
     GameOver* gameOver;
 }
 
@@ -45,7 +43,7 @@
 - (instancetype)init;
 
 //stick
--(void)updatePos:(CCTime)delta;
+//-(void)updatePos:(CCTime)delta;
 -(float)getVelocity;
 -(CGPoint)getDirection;
 -(void)touchBegan:(CCTouch *)touch withEvent:(CCTouchEvent *)event;

@@ -32,6 +32,7 @@
 - (instancetype)init;
 -(float)getHp;
 -(void)setHp:(float)m_hp;
+-(CGPoint)getPosition;
 
 // -----------------------------------------------------------------
 

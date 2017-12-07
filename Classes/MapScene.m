@@ -17,6 +17,7 @@
 @implementation MapScene{
     CGSize viewSize;
     CGSize playerSize;
+    CGSize blockSize;
 }
 
 // -----------------------------------------------------------------
@@ -32,8 +33,6 @@
     NSAssert(self, @"Unable to create class %@", [self class]);
     // class initalization goes here
     viewSize = [[CCDirector sharedDirector] viewSize];
-    m_killed = 0;
-    died = NO;
     
     //set background color
     CCColor *gbColor = [CCColor colorWithRed:0.0f green:0.0f blue:0.3f alpha:0.4f];
@@ -44,16 +43,15 @@
     [self addChild:m_enemy];
     
     //generate player
-    m_player = [CCSprite spriteWithImageNamed:@"bear.png"];
-    [m_player setScale:0.3f];
-    [m_player setPosition:[MapEdittor GeneratePosition:m_player Scale:0.3f]];
-    playerSize = CGSizeMake(m_player.contentSize.width*0.3f, m_player.contentSize.height*0.3f);
-    [self addChild:m_player];
+    player = [Player node];
+    playerSize = [player getEntitySize];
+    [self addChild:player];
+    
+
     
     //bar
-    m_hp = 100.0f;
     health = [Health node];
-    [health setPosition:CGPointMake(m_player.position.x, m_player.position.y+playerSize.height-12.0f)];
+    [health setPosition:CGPointMake([player getPosition].x, [player getPosition].y + playerSize.height*0.5f +8)];
     [self addChild:health];
     
     //generate stick
@@ -81,20 +79,26 @@
     //修改浮在上面的圆
     m_stick.getStickFloat.position = ccpAdd(m_stick.getStickFloat.position, ccpMult(ccpSub(m_stick.getCurrentPoint, m_stick.getStickFloat.position), 0.5f));
     
+    //[m_block keepPositionWithPlayer:player];
+    
+    
     //collision
     [self collision];
-    if (m_hp>0) {
-        m_hp -= 10;
+    if ([player getMyHp]>0) {
+//        [player setMyHp:[player getMyHp] - 10];
     }
-    [health setHp:m_hp];
-    [m_info modifyHp:m_hp];
+
+    [health setHp:[player getMyHp]];
+    [m_info modifyHp:[player getMyHp]];
     
     //detect death
     [self deathDetect];
     //exit the game
-    if (died) {
+    if (![player getAliveState]) {
         [self exitTheGame];
     }
+    
+    
 }
 -(void)touchBegan:(CCTouch *)touch withEvent:(CCTouchEvent *)event{
     if (!m_stick.getStickState) {
@@ -124,37 +128,49 @@
     [self updatePlayer];
     
 }
+
 -(void)updatePlayer{
     float force = [self getVelocity];
     CGPoint dir = [self getDirection];
+
     dir = ccpMult(dir, -1);
     
     if (dir.x < 0) {
-        m_player.flipX = YES;
+        [player mirror:YES Dir:dir];
     }else{
-        m_player.flipX = NO;
+        [player mirror:NO Dir:dir];
     }
-    
+
     //boundary limit
-    CGPoint deltaPos = ccpMult(dir, force*0.05);
-    if (deltaPos.x + m_player.position.x > viewSize.width - playerSize.width*0.5) {
-        m_player.position = CGPointMake(viewSize.width - playerSize.width*0.5, m_player.position.y);
-    }else if (deltaPos.x + m_player.position.x < playerSize.width*0.5 ){
-        m_player.position = CGPointMake(playerSize.width*0.5, m_player.position.y);
-    }else{
-        m_player.position = CGPointMake(m_player.position.x + deltaPos.x, m_player.position.y);
-    }
+    //still sth wrong here
+    //[player setPosition:[MapEdittor boundaryLimitEntity:player Dir:dir Force:force Screen:viewSize]];
     
-    if (deltaPos.y + m_player.position.y >viewSize.height - playerSize.height*0.5) {
-        m_player.position = CGPointMake(m_player.position.x, viewSize.height - playerSize.height*0.5);
-    }else if (deltaPos.y + m_player.position.y <playerSize.height*0.5){
-        m_player.position = CGPointMake(m_player.position.x, playerSize.height*0.5);
+    CGPoint deltaPos = ccpMult(dir, force*0.05);
+    if (deltaPos.x + [player getPosition].x > viewSize.width - playerSize.width*0.5) {
+        [player setPosition:CGPointMake(viewSize.width - playerSize.width*0.5, [player getPosition].y)];
+    }else if (deltaPos.x + [player getPosition].x < playerSize.width*0.5 ){
+        [player setPosition: CGPointMake(playerSize.width*0.5, [player getPosition].y)];
     }else{
-        m_player.position = CGPointMake(m_player.position.x, m_player.position.y + deltaPos.y);
+        [player setPosition: CGPointMake( [player getPosition].x+ deltaPos.x,  [player getPosition].y)];
+    }
+
+    if (deltaPos.y +  [player getPosition].y >viewSize.height - playerSize.height*0.5) {
+        [player setPosition: CGPointMake( [player getPosition].x, viewSize.height - playerSize.height*0.5)];
+    }else if (deltaPos.y +  [player getPosition].y <playerSize.height*0.5){
+        [player setPosition:CGPointMake( [player getPosition].x, playerSize.height*0.5)];
+    }else{
+        [player setPosition:CGPointMake( [player getPosition].x,  [player getPosition].y + deltaPos.y)];
     }
     //update the bar's position
-    [health setPosition:CGPointMake(m_player.position.x, m_player.position.y+playerSize.height-12.0f)];
-    //player.position = ccpAdd(player.position, deltaPos);
+    [health setPosition:CGPointMake([player getPosition].x, [player getPosition].y + playerSize.height*0.5f +8)];
+    
+    //update block's position
+//    CGPoint pos = [player getPosition];
+//    if ([player getTowardsLeft]) {
+//        [m_block setPosition: CGPointMake(pos.x - playerSize.width*0.5 , pos.y - blockSize.height*0.5)];
+//    }else{
+//        [m_block setPosition: CGPointMake(pos.x + playerSize.width*0.5 , pos.y - blockSize.height*0.5)];
+//    }
 }
 //摇杆的方向
 -(CGPoint)getDirection{
@@ -171,23 +187,23 @@
 }
 
 -(void)collision{
-    CGRect rectOfPlayer = [m_player boundingBox];
+    CGRect rectOfPlayer = [player getBoundingBox];
     CGRect rectOfEnemy = [m_enemy getBoundingBox];
 
     if ([MapEdittor rectIncludeRecta:rectOfPlayer Scalea:0.3f Rectb:rectOfEnemy Scaleb:0.5f]) {
         printf("Clicked\n");
         //eat the enemy
         [m_enemy setVisible:NO];
-        m_killed ++;
-        [m_info modifyKilled:m_killed];
-        
+        [player killOne];
+        [m_info modifyKilled:[player getKillNum]];
+
         //after removing the obj doesnt exist->problem
         //[self removeChild:m_enemy];
     }
 }
 -(void)deathDetect{
-    if (m_hp <=0 ) {
-        died = YES;
+    if ([player getMyHp]<=0) {
+        [player entityDied];
     }
 }
 -(void)exitTheGame{
@@ -201,6 +217,33 @@
     [self addChild:gameOver];
 }
 -(void)attack{
+    
+    //action for player
+    CCSpriteFrame *frame1 = [CCSpriteFrame frameWithImageNamed:@"bear.png"];
+    CCSpriteFrame *frame2 = [CCSpriteFrame frameWithImageNamed:@"beararmmove.png"];
+    NSArray* frames = [NSArray arrayWithObjects:frame1, frame2, nil];
+    CCAnimation *animation = [CCAnimation animationWithSpriteFrames:frames delay:0.1f];
+    CCActionAnimate *animate = [CCActionAnimate actionWithAnimation:animation];
+    CCActionSequence *seq = [CCActionSequence actions:animate, nil];
+    CCActionSpeed *speed = [CCActionSpeed actionWithAction:seq speed:1.0f];
+    [player runAct:speed];
+ 
+    //block
+    Block* block = [Block node];
+    blockSize = [block getEntitySize];
+    [block keepPositionWithPlayer:player];
+    [self addChild:block];
+    
+    CGPoint startPoint = [block getPosition];
+    CGPoint endPoint;
+    
+    if ([player getTowardsLeft]) {
+        endPoint = CGPointMake(startPoint.x - 550.0, 0);
+    }else{
+        endPoint = CGPointMake(startPoint.x + 550.0, 0);
+    }
+    
+    [MapEdittor moveWithParabola:block startP:startPoint endP:endPoint startA:0 endA:180 Time:1.5f];
     printf("attack!\n");
 }
 // -----------------------------------------------------------------
