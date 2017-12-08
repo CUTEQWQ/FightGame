@@ -57,6 +57,16 @@
     CGPoint randomPoint = CGPointMake(width, height);
     return randomPoint;
 }
+//for drop-entity
++(CGPoint)GeneratePositionOnTop:(CCSprite *)m_sprite Scale:(float)m_scale{
+    CGSize spriteSize = CGSizeMake(m_sprite.contentSize.width*m_scale, m_sprite.contentSize.height*m_scale);
+    CGSize viewSize = [[CCDirector sharedDirector] viewSize];
+    float x = CCRANDOM_0_1() * (viewSize.width - spriteSize.width*0.5);
+    if (x < spriteSize.width*0.5) {
+        x = spriteSize.width*0.5;
+    }
+    return CGPointMake(x, spriteSize.height+viewSize.height);
+}
 
 +(BOOL)rectIncludeRecta:(CGRect)recta Scalea:(float)scalea Rectb:(CGRect)rectb Scaleb:(float)scaleb{
 //    CGPoint aleftup = recta.origin;

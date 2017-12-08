@@ -55,6 +55,9 @@
 -(void)modifyHp:(int)hp{
     m_hp = hp;
     infoStr = [NSMutableString stringWithFormat:@"Nickname:%@   health:%3d   killed:%2d",m_nickName,m_hp,m_killed];
+    if (m_hp <=0 ) {
+        infoStr = [NSMutableString stringWithFormat:@"Nickname:%@   health:  0   killed:%2d",m_nickName,m_killed];
+    }
     [info setString:infoStr];
 }
 -(void)modifyKilled:(int)killed{

@@ -18,21 +18,35 @@
 
 // -----------------------------------------------------------------
 
-+ (instancetype)node
++ (instancetype)node:(Enemy*)enemy
 {
-    return [[self alloc] init];
+    return [[self alloc] initWithEnemy:enemy];
 }
 
-- (instancetype)init
+- (instancetype)initWithEnemy:(Enemy *)enemy
 {
     self = [super init];
     NSAssert(self, @"Unable to create class %@", [self class]);
     // class initalization goes here
+    
+    [self initMyPara];
+    m_enemy = enemy;
+    
     m_scale = 0.4f;
     m_entity = [CCSprite spriteWithImageNamed:@"block.png"];
     [m_entity setScale:m_scale];
+    
+    CGRect rect = m_entity.boundingBox;
+    CGSize size = [self getEntitySize];
+    body = [CCPhysicsBody bodyWithRect:rect cornerRadius:size.width*0.5];
+    [m_entity setPhysicsBody:body];
+    
     [self addChild:m_entity];
     return self;
+}
+
+-(void)update:(CCTime)delta{
+    [self collisionWithEnemy];
 }
 
 //no need to add this method, just easy for understanding
@@ -51,6 +65,18 @@
     }else{
         [m_entity setPosition: CGPointMake(pos.x + playerSize.width*0.5 , pos.y - blockSize.height*0.5)];
     }
+}
+-(void)collisionWithEnemy{
+    //maybe enemy is been killed
+    if ([m_enemy getAliveState]) {
+        CGRect rectOfBlock = m_entity.boundingBox;
+        CGRect rectOfEnemy = [m_enemy getBoundingBox];
+        if ([MapEdittor rectIncludeRecta:rectOfBlock Scalea:m_scale Rectb:rectOfEnemy Scaleb:[m_enemy getScale]]) {
+            printf("attack enemy!\n");
+            [m_enemy Damage:20];
+        }
+    }else
+        return;
 }
 // -----------------------------------------------------------------
 

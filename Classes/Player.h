@@ -35,6 +35,8 @@
 - (instancetype)init;
 -(void)mirror:(BOOL)flip Dir:(CGPoint)dir;
 -(BOOL)getTowardsLeft;
+-(void)tired;
+-(void)repair;
 // -----------------------------------------------------------------
 
 @end

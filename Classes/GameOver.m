@@ -29,55 +29,46 @@
     NSAssert(self, @"Unable to create class %@", [self class]);
     // class initalization goes here
     
-    //预设为胜利
-    win = YES;
-    [self loadRes];
-    
-    return self;
-}
--(void)loadRes{
     CGSize viewSize = [[CCDirector sharedDirector] viewSize];
-    if (win) {
-        gameOver = [CCSprite spriteWithImageNamed:@"win.png"];
-    } else{
-        gameOver = [CCSprite spriteWithImageNamed:@"lose.png"];
-    }
-    [gameOver setPosition:CGPointMake(viewSize.width*0.5, viewSize.height*0.5)];
-    
-    [self addChild:gameOver];
+    gameOverWin = [CCSprite spriteWithImageNamed:@"win.png"];
+    gameOverLose = [CCSprite spriteWithImageNamed:@"lose.png"];
+
+    [gameOverWin setPosition:CGPointMake(viewSize.width*0.5, viewSize.height*0.5)];
+    [gameOverLose setPosition:CGPointMake(viewSize.width*0.5, viewSize.height*0.5)];
     
     //exit game
     CCSpriteFrame *exitFrame = [CCSpriteFrame frameWithImageNamed:@"exitBtn.png"];
     exitBtn = [CCButton buttonWithTitle:@"" spriteFrame:exitFrame];
     [exitBtn setPosition:CGPointMake(viewSize.width*0.5+100, viewSize.height*0.5-50)];
     [exitBtn setTarget:self selector:@selector(exit)];
-    [self addChild:exitBtn];
+    [self addChild:exitBtn z:4];
     
     //play again
     CCSpriteFrame *againFrame = [CCSpriteFrame frameWithImageNamed:@"againBtn.png"];
     againBtn = [CCButton buttonWithTitle:@"" spriteFrame:againFrame];
     [againBtn setPosition:CGPointMake(viewSize.width*0.5-100, viewSize.height*0.5-50)];
-    [againBtn setTarget:self selector:@selector(again)];
-    [self addChild:againBtn];
+    //[againBtn setTarget:self selector:@selector(again)];
+    [self addChild:againBtn z:4];
+    
+    return self;
 }
+
+//load res put here
 -(void)setWin:(BOOL)isWin{
     win = isWin;
+    if (win) {
+        [self addChild:gameOverWin];
+    }else{
+        [self addChild:gameOverLose];
+    }
 }
+
 -(void)exit{
-    printf("exit!\n");
     [[CCDirector sharedDirector] end];
     exit(0);
 }
--(void)again{
-    printf("again\n");
-    //重新加载游戏场景
-//    CCScene *cur = [[CCDirector sharedDirector] runningScene];
-//    CCScene *newScene = [[cur class] alloc];
-//    [[CCDirector sharedDirector] replaceScene:newScene];
-    
-}
--(void)sendMessage:(NSString *)key Sender:(CCNode *)_sender Receiver:(CCNode *)_receiver{
-    
+-(CCButton*)getAgainBtn{
+    return againBtn;
 }
 // -----------------------------------------------------------------
 

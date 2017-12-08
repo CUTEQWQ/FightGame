@@ -33,33 +33,38 @@
     NSAssert(self, @"Unable to create class %@", [self class]);
     // class initalization goes here
     viewSize = [[CCDirector sharedDirector] viewSize];
+    dropNum = 10;
+    dropUpdateTime = 4.0f;
+    appleNumMax = 5;
+    enemyNum = 1;
     
     //set background color
     CCColor *gbColor = [CCColor colorWithRed:0.0f green:0.0f blue:0.3f alpha:0.4f];
     [self setColor:gbColor];
-
-    //generate enemy
-    m_enemy = [Enemy node];
-    [self addChild:m_enemy];
+    
+    //gen when game started
+    [self initApples];
     
     //generate player
     player = [Player node];
     playerSize = [player getEntitySize];
-    [self addChild:player];
+    [self addChild:player z:2 name:@"player"];
     
-
+    //generate enemy
+    m_enemy = [Enemy node:player];
+    [self addChild:m_enemy z:1 name:@"enemy"];
     
     //bar
     health = [Health node];
     [health setPosition:CGPointMake([player getPosition].x, [player getPosition].y + playerSize.height*0.5f +8)];
-    [self addChild:health];
+    [self addChild:health z:2];
     
     //generate stick
     m_stick = [JoyStick node];
     //active the joystick
     [m_stick Active];
     self.userInteractionEnabled = YES;
-    [self addChild:m_stick];
+    [self addChild:m_stick z:2];
     
     //attack button
     CCSpriteFrame *attackFrame = [CCSpriteFrame frameWithImageNamed:@"attackBtn.png"];
@@ -68,37 +73,40 @@
     [attackBtn setTarget:self selector:@selector(attack)];
     [attackBtn setPosition:CGPointMake(viewSize.width - frameSize.width*0.5 - 10,frameSize.height*0.5 +10 )];
     [self addChild:attackBtn];
-    
-
     m_info = [UsrInfo node];
     [self addChild:m_info];
+    
+    //drop 每4s掉落一次 可在上面重新配置
+    [self dropSnow];
+
+    //reduce player's health ervery 7.5 sec
+    [self schedule:@selector(tiredOfPlayer) interval:7.5f];
+    //generate drop enetity ervery dropUpdateTime sec
+    [self schedule:@selector(dropSnow) interval:dropUpdateTime];
+    //gengrate apples every 5 sec
+    [self schedule:@selector(keepApples) interval:5.0f];
+    
     return self;
 }
 //实时监测点到了哪里
 -(void)update:(CCTime)delta{
+    
+    //just for test
+    //[player Damage:10];
+    
     //修改浮在上面的圆
     m_stick.getStickFloat.position = ccpAdd(m_stick.getStickFloat.position, ccpMult(ccpSub(m_stick.getCurrentPoint, m_stick.getStickFloat.position), 0.5f));
     
     //[m_block keepPositionWithPlayer:player];
-    
-    
-    //collision
-    [self collision];
-    if ([player getMyHp]>0) {
-//        [player setMyHp:[player getMyHp] - 10];
-    }
 
     [health setHp:[player getMyHp]];
     [m_info modifyHp:[player getMyHp]];
     
-    //detect death
-    [self deathDetect];
+    [self countEnemyNum];
     //exit the game
-    if (![player getAliveState]) {
+    if ((![player getAliveState])||(enemyNum == 0) ){
         [self exitTheGame];
     }
-    
-    
 }
 -(void)touchBegan:(CCTouch *)touch withEvent:(CCTouchEvent *)event{
     if (!m_stick.getStickState) {
@@ -145,7 +153,7 @@
     //still sth wrong here
     //[player setPosition:[MapEdittor boundaryLimitEntity:player Dir:dir Force:force Screen:viewSize]];
     
-    CGPoint deltaPos = ccpMult(dir, force*0.05);
+    CGPoint deltaPos = ccpMult(dir, force*0.1);
     if (deltaPos.x + [player getPosition].x > viewSize.width - playerSize.width*0.5) {
         [player setPosition:CGPointMake(viewSize.width - playerSize.width*0.5, [player getPosition].y)];
     }else if (deltaPos.x + [player getPosition].x < playerSize.width*0.5 ){
@@ -164,13 +172,6 @@
     //update the bar's position
     [health setPosition:CGPointMake([player getPosition].x, [player getPosition].y + playerSize.height*0.5f +8)];
     
-    //update block's position
-//    CGPoint pos = [player getPosition];
-//    if ([player getTowardsLeft]) {
-//        [m_block setPosition: CGPointMake(pos.x - playerSize.width*0.5 , pos.y - blockSize.height*0.5)];
-//    }else{
-//        [m_block setPosition: CGPointMake(pos.x + playerSize.width*0.5 , pos.y - blockSize.height*0.5)];
-//    }
 }
 //摇杆的方向
 -(CGPoint)getDirection{
@@ -185,39 +186,24 @@
 -(float)getVelocity{
     return ccpDistance(m_stick.getCenterPoint, m_stick.getEndPoint);
 }
-
--(void)collision{
-    CGRect rectOfPlayer = [player getBoundingBox];
-    CGRect rectOfEnemy = [m_enemy getBoundingBox];
-
-    if ([MapEdittor rectIncludeRecta:rectOfPlayer Scalea:0.3f Rectb:rectOfEnemy Scaleb:0.5f]) {
-        printf("Clicked\n");
-        //eat the enemy
-        [m_enemy setVisible:NO];
-        [player killOne];
-        [m_info modifyKilled:[player getKillNum]];
-
-        //after removing the obj doesnt exist->problem
-        //[self removeChild:m_enemy];
-    }
-}
--(void)deathDetect{
-    if ([player getMyHp]<=0) {
-        [player entityDied];
-    }
-}
 -(void)exitTheGame{
     [m_stick InActive];
     self.userInteractionEnabled = NO;
 
     gameOver = [GameOver node];
-    //改成lose
-    [gameOver setWin:NO];
-    [gameOver loadRes];
-    [self addChild:gameOver];
+    CCButton * againBtn = [gameOver getAgainBtn];
+    [againBtn setTarget:self selector:@selector(again)];
+        [self addChild:gameOver z:4];
+    if (enemyNum == 0) {
+        [gameOver setWin:YES];
+        //[gameOver again];
+    }else{
+        [gameOver setWin:NO];
+        //[gameOver exit];
+    }
+
 }
 -(void)attack{
-    
     //action for player
     CCSpriteFrame *frame1 = [CCSpriteFrame frameWithImageNamed:@"bear.png"];
     CCSpriteFrame *frame2 = [CCSpriteFrame frameWithImageNamed:@"beararmmove.png"];
@@ -229,7 +215,7 @@
     [player runAct:speed];
  
     //block
-    Block* block = [Block node];
+    Block* block = [Block node:m_enemy];
     blockSize = [block getEntitySize];
     [block keepPositionWithPlayer:player];
     [self addChild:block];
@@ -244,7 +230,54 @@
     }
     
     [MapEdittor moveWithParabola:block startP:startPoint endP:endPoint startA:0 endA:180 Time:1.5f];
-    printf("attack!\n");
+}
+-(void)dropSnow{
+    for (int i=0; i<dropNum; i++) {
+        Drop* drop = [Drop node:player];
+        [self addChild:drop z:3];
+    }
+}
+-(void)tiredOfPlayer{
+    [player tired];
+    [health setHp:[player getMyHp]];
+    [m_info modifyHp:[player getMyHp]];
+}
+//随机位置生成苹果
+-(void)initApples{
+    apples = [NSMutableArray arrayWithCapacity:appleNumMax];
+
+    for (int i=1; i<=appleNumMax; i++) {
+        Apple *apple = [Apple node:player];
+        [apples addObject:apple];
+        appleNum ++;
+    }
+    [self showApples];
+}
+-(void)keepApples{
+    appleNum = (int)apples.count;
+    for (int i=appleNum; i<=appleNumMax; i++) {
+        Apple *apple = [Apple node:player];
+        [apples addObject:apple];
+        [self addChild:apple z:0 name:@"health"];
+    }
+    appleNum = appleNumMax;
+}
+-(void)showApples{
+    for (int i=0; i<apples.count; i++) {
+        [self addChild:[apples objectAtIndex:i] z:0 name:@"health"];
+    }
+}
+
+//best way is to reload current scene, but i failed
+-(void)again{
+//    CCScene *cur = [[CCDirector sharedDirector] runningScene];
+//    CCScene *newScene = [[cur class] alloc];
+//    [[CCDirector sharedDirector] replaceScene:newScene];
+}
+-(void)countEnemyNum{
+    if (![m_enemy getAliveState]) {
+        enemyNum -= 1;
+    }
 }
 // -----------------------------------------------------------------
 

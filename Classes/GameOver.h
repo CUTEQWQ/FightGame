@@ -21,7 +21,8 @@
 @interface GameOver : CCLayout <MessageDelegate>
 {
     BOOL win;
-    CCSprite *gameOver;
+    CCSprite *gameOverWin;
+    CCSprite *gameOverLose;
     CCButton *exitBtn;
     CCButton *againBtn;
 }
@@ -34,10 +35,10 @@
 
 + (instancetype)node;
 - (instancetype)init;
--(void)loadRes;
 -(void)setWin:(BOOL)isWin;
 -(void)exit;
--(void)again;
+-(CCButton*)getAgainBtn;
+//-(void)again;
 // -----------------------------------------------------------------
 
 @end

@@ -21,6 +21,8 @@
 #import "GameOver.h"
 #import "Player.h"
 #import "Block.h"
+#import "Drop.h"
+#import "Apple.h"
 
 // -----------------------------------------------------------------
 
@@ -31,6 +33,13 @@
     Health *health;
     UsrInfo* m_info;
     GameOver* gameOver;
+    int dropNum;
+    
+    NSMutableArray *apples;
+    int appleNum;
+    int appleNumMax;
+    int enemyNum;
+    float dropUpdateTime;
 }
 
 // -----------------------------------------------------------------
@@ -50,10 +59,15 @@
 -(void)touchEnded:(CCTouch *)touch withEvent:(CCTouchEvent *)event;
 -(void)touchMoved:(CCTouch *)touch withEvent:(CCTouchEvent *)event;
 -(void)updatePlayer;
--(void)collision;
--(void)deathDetect;
 -(void)attack;
 -(void)exitTheGame;
+-(void)dropSnow;
+-(void)tiredOfPlayer;
+-(void)initApples;
+-(void)keepApples;
+-(void)showApples;
+-(void)again;
+-(void)countEnemyNum;
 // -----------------------------------------------------------------
 
 @end

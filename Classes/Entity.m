@@ -61,4 +61,13 @@
 -(void)runAct:(CCAction *)action{
     [m_entity runAction:action];
 }
+-(void)setTag:(NSMutableString *)tag{
+    m_tag = tag;
+}
+-(NSMutableString*)getTag{
+    return m_tag;
+}
+-(float)getScale{
+    return m_scale;
+}
 @end

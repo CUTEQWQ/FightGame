@@ -15,7 +15,6 @@
 #import "cocos2d-ui.h"
 
 // -----------------------------------------------------------------
-
 @interface UsrInfo : CCSprite{
     CCSprite * portrait;
 

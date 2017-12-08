@@ -14,11 +14,15 @@
 #import "cocos2d.h"
 #import "MapEdittor.h"
 #import "Entity.h"
+#import "Player.h"
+#import "cocos2d-ui.h"
 
 // -----------------------------------------------------------------
 
 @interface Enemy : Entity{
     int enemyType;
+    CCLabelTTF *show;
+    Player* m_player;
 }
 
 // -----------------------------------------------------------------
@@ -27,9 +31,9 @@
 // -----------------------------------------------------------------
 // methods
 
-+ (instancetype)node;
-- (instancetype)init;
-
++ (instancetype)node:(Player*)player;
+- (instancetype)initWithPlayer:(Player*)player;
+-(void)collisionWithPlayer;
 // -----------------------------------------------------------------
 
 @end

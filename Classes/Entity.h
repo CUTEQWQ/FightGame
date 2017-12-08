@@ -10,13 +10,15 @@
 
 //for each sprite entity in game
 
-@interface Entity : CCSprite{
+@interface Entity : CCSprite {
     @protected
     CCSprite* m_entity;
     int m_hp;
     BOOL m_alive;
     int m_killed;
     float m_scale;
+    NSMutableString *m_tag;
+    CCPhysicsBody *body;
 }
 -(void)Damage:(int)hurt;
 -(void)initMyPara;
@@ -31,4 +33,11 @@
 -(void)entityDied;
 -(CGSize)getEntitySize;
 -(void)runAct:(CCAction *)action;
+-(void)setTag:(NSMutableString*)tag;
+-(NSMutableString*)getTag;
+-(float)getScale;
+-(void)deathDetection;
+
+//need to be rewrite
+-(void)deathDetection;
 @end
